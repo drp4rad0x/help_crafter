@@ -3,8 +3,8 @@
 
  ## Quick Start
 
- 1. [command()] for chaining commands to build help message
- 2. [build()] for generate help message
+ 1. command() for chaining commands to build help message
+ 2. build() for generate help message
 
  ## Example
  ```rust
