@@ -8,8 +8,8 @@ categories = [
 ]
 keywords = [
     "help",
-    "help message",
-    "generate help message"
+    "help_message",
+    "generate_help_message"
 ]
 license = "Apache-2.0 OR MIT"
 homepage = "https://github.com/drp4rad0x/help_crafter"
