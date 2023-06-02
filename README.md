@@ -8,19 +8,21 @@
 
  ## Example
  ```rust
- use help_crafter::HelpMessageBuilder;
- let help = HelpMessageBuilder::default()
-     .command("i", "index", "", "index", false)
-     .command(
-         "k",
-         "kill",
-         "session_id",
-         "the big brown fox jumps over the lazy dog the big brown fox",
-         false,
-     )
-    .command("", "rub", "sub", "rub something", true)
-    .command("t", "", "something", "t something", false)
-    .command("o", "", "something", "o something", true)
+    use help_crafter::enums::DASHED;
+    use help_crafter::HelpMessageBuilder;
+    
+    let help = HelpMessageBuilder::default()
+    .command("i", "index", "", "index", DASHED::YES)
+    .command(
+    "k",
+    "kill",
+    "session_id",
+    "the big brown fox jumps over the lazy dog the big brown fox",
+    DASHED::YES,
+    )
+    .command("", "rub", "sub", "rub something", DASHED::NO)
+    .command("t", "", "something", "t something", DASHED::YES)
+    .command("o", "", "something", "o something", DASHED::NO)
     .build();
  ```
  Returns following message.

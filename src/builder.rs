@@ -1,4 +1,6 @@
+use crate::enums::DASHED;
 use std::collections::HashMap;
+
 /// Unit of help message
 #[derive(Default, Clone, Debug)]
 pub struct Command {
@@ -40,8 +42,12 @@ impl HelpMessageBuilder {
         long_command: &str,
         parameter_name: &str,
         description: &str,
-        no_dash: bool,
+        dash: DASHED,
     ) -> Self {
+        let no_dash = match dash {
+            DASHED::YES => false,
+            DASHED::NO => true,
+        };
         self.commands.push(Command::new(
             long_command.to_owned(),
             short_command.to_owned(),

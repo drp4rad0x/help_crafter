@@ -8,20 +8,21 @@
 //!
 //! ## Example
 //! ```rust
+//! use help_crafter::enums::DASHED;
 //! use help_crafter::HelpMessageBuilder;
-//! let help = HelpMessageBuilder::default()
-//!     .command("i", "index", "", "index", false)
-//!     .command(
-//!         "k",
-//!         "kill",
-//!         "session_id",
-//!         "the big brown fox jumps over the lazy dog the big brown fox",
-//!         false,
-//!     )
-//!    .command("", "rub", "sub", "rub something", true)
-//!    .command("t", "", "something", "t something", false)
-//!    .command("o", "", "something", "o something", true)
-//!    .build();
+//!         let help = HelpMessageBuilder::default()
+//!             .command("i", "index", "", "index", DASHED::YES)
+//!             .command(
+//!                 "k",
+//!                 "kill",
+//!                 "session_id",
+//!                 "the big brown fox jumps over the lazy dog the big brown fox",
+//!                 DASHED::YES,
+//!             )
+//!             .command("", "rub", "sub", "rub something", DASHED::NO)
+//!             .command("t", "", "something", "t something", DASHED::YES)
+//!             .command("o", "", "something", "o something", DASHED::NO)
+//!             .build();
 //! ```
 //! Returns following message.
 //! ```text
@@ -38,27 +39,29 @@
 
 #![warn(rust_2018_idioms)]
 pub mod builder;
+pub mod enums;
 
 pub use builder::*;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::enums::DASHED;
 
     #[test]
     fn it_works() {
         let help = HelpMessageBuilder::default()
-            .command("i", "index", "", "index", false)
+            .command("i", "index", "", "index", DASHED::YES)
             .command(
                 "k",
                 "kill",
                 "session_id",
                 "the big brown fox jumps over the lazy dog the big brown fox",
-                false,
+                DASHED::YES,
             )
-            .command("", "rub", "sub", "rub something", true)
-            .command("t", "", "something", "t something", false)
-            .command("o", "", "something", "o something", true)
+            .command("", "rub", "sub", "rub something", DASHED::NO)
+            .command("t", "", "something", "t something", DASHED::YES)
+            .command("o", "", "something", "o something", DASHED::NO)
             .build();
 
         println!("{}", help)
