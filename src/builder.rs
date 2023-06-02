@@ -1,68 +1,66 @@
-use crate::enums::DASHED;
+use crate::enums::{Parameter, DASHED};
 use std::collections::HashMap;
 
 /// Unit of help message
 #[derive(Default, Clone, Debug)]
-pub struct Command {
+pub struct Command<'a> {
     pub long_command: String,
     pub short_command: String,
     pub description: String,
-    pub parameter_name: String,
-    pub no_dash: bool,
+    pub parameter_name: Parameter<'a>,
+    pub dash_status: DASHED,
 }
 
-impl Command {
+impl<'a> Command<'a> {
     pub fn new(
         long_command: String,
         short_command: String,
         description: String,
-        parameter_name: String,
-        no_dash: bool,
+        parameter_name: Parameter<'a>,
+        dash_status: DASHED,
     ) -> Self {
         Self {
             long_command,
             short_command,
             description,
             parameter_name,
-            no_dash,
+            dash_status,
         }
     }
 }
+
 /// Structure for building help message
 #[derive(Debug, Default)]
-pub struct HelpMessageBuilder {
-    commands: Vec<Command>,
+pub struct HelpMessageBuilder<'a> {
+    commands: Vec<Command<'a>>,
 }
 
-impl HelpMessageBuilder {
+impl<'a> HelpMessageBuilder<'a> {
     /// Add command to help message.
     pub fn command(
         mut self,
         short_command: &str,
         long_command: &str,
-        parameter_name: &str,
+        parameter_name: Parameter<'a>,
         description: &str,
-        dash: DASHED,
+        dash_status: DASHED,
     ) -> Self {
-        let no_dash = match dash {
-            DASHED::YES => false,
-            DASHED::NO => true,
-        };
         self.commands.push(Command::new(
             long_command.to_owned(),
             short_command.to_owned(),
             description.to_owned(),
-            parameter_name.to_owned(),
-            no_dash,
+            parameter_name,
+            dash_status,
         ));
         self
     }
-    fn max_width(commands: &Vec<Command>) -> HashMap<&str, usize> {
+    fn max_width(commands: &Vec<Command<'a>>) -> HashMap<&'a str, usize> {
         let mut result = HashMap::new();
         result.insert("short", 0);
         result.insert("long", 0);
         result.insert("description", 0);
         result.insert("parameter_name", 0);
+
         for command in commands {
             if command.short_command.len() > *result.get("short").unwrap() {
                 *result.get_mut("short").unwrap() = command.short_command.len();
@@ -73,8 +71,8 @@ impl HelpMessageBuilder {
             if command.description.len() > *result.get("description").unwrap() {
                 *result.get_mut("description").unwrap() = command.description.len();
             }
-            if command.parameter_name.len() > *result.get("parameter_name").unwrap() {
-                *result.get_mut("parameter_name").unwrap() = command.parameter_name.len();
+            if command.parameter_name.get_len() > *result.get("parameter_name").unwrap() {
+                *result.get_mut("parameter_name").unwrap() = command.parameter_name.get_len();
             }
         }
         *result.get_mut("short").unwrap() += 1;
@@ -156,38 +154,30 @@ impl HelpMessageBuilder {
         result
     }
 
-    fn craft(command: Command, max_widths: &HashMap<&str, usize>) -> String {
+    fn craft(command: Command<'a>, max_widths: &HashMap<&str, usize>) -> String {
         let mut message = String::with_capacity(200);
-        let parameter = format!("<{}>", command.parameter_name);
+        let parameter = match command.parameter_name {
+            Parameter::OPTIONAL(param) => format!("[{}]", param),
+            Parameter::REQUIRED(param) => format!("<{}>", param),
+            Parameter::NO => String::new(),
+        };
+
         let description_str = Self::field_wrapper(max_widths, &command.description, 40);
 
-        if parameter.eq("<>") {
-            message.push_str(&format!(
-                "{:<short$}   {:<long$}   {:<parameter_name$}   {:<description$}\n",
-                command.short_command,
-                command.long_command,
-                command.parameter_name,
-                // command.description,
-                description_str,
-                short = max_widths.get("short").unwrap(),
-                long = max_widths.get("long").unwrap(),
-                parameter_name = max_widths.get("parameter_name").unwrap(),
-                description = max_widths.get("description").unwrap(),
-            ));
-        } else {
-            message.push_str(&format!(
-                "{:<short$}   {:<long$}   {:<parameter_name$}   {:<description$}\n",
-                command.short_command,
-                command.long_command,
-                parameter,
-                // command.description,
-                description_str,
-                short = max_widths.get("short").unwrap(),
-                long = max_widths.get("long").unwrap(),
-                description = max_widths.get("description").unwrap(),
-                parameter_name = max_widths.get("parameter_name").unwrap(),
-            ));
-        }
+        message.push_str(&format!(
+            "{:<short$}   {:<long$}   {:<parameter_name$}   {:<description$}\n",
+            command.short_command,
+            command.long_command,
+            parameter,
+            // command.parameter_name,
+            // command.description,
+            description_str,
+            short = max_widths.get("short").unwrap(),
+            long = max_widths.get("long").unwrap(),
+            parameter_name = max_widths.get("parameter_name").unwrap(),
+            description = max_widths.get("description").unwrap(),
+        ));
+
         message
     }
     /// Build the help message string.
@@ -196,23 +186,26 @@ impl HelpMessageBuilder {
         let max_widths = Self::max_width(&commands);
         let mut result = String::new();
         for mut command in commands.clone() {
-            if !command.no_dash {
-                if !command.long_command.is_empty() {
-                    let mut long = String::with_capacity(command.long_command.len() + 2);
-                    long.push_str("--");
-                    long.push_str(&command.long_command);
-                    command.long_command = long
+            match command.dash_status {
+                DASHED::YES => {
+                    if !command.long_command.is_empty() {
+                        let mut long = String::with_capacity(command.long_command.len() + 2);
+                        long.push_str("--");
+                        long.push_str(&command.long_command);
+                        command.long_command = long
+                    }
+                    if !command.short_command.is_empty() {
+                        let mut short = String::with_capacity(command.short_command.len() + 1);
+                        short.push('-');
+                        short.push_str(&command.short_command);
+                        command.short_command = short
+                    }
                 }
-                if !command.short_command.is_empty() {
-                    let mut short = String::with_capacity(command.short_command.len() + 1);
-                    short.push('-');
-                    short.push_str(&command.short_command);
-                    command.short_command = short
+                DASHED::NO => {
+                    command.short_command = format!(" {}", command.short_command);
+                    command.long_command = format!("  {}", command.long_command);
                 }
-            } else {
-                command.short_command = format!(" {}", command.short_command);
-                command.long_command = format!("  {}", command.long_command);
-            }
+            };
 
             result.push_str(&Self::craft(command, &max_widths));
         }
