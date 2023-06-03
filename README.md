@@ -43,12 +43,3 @@ use help_crafter::HelpMessageBuilder;
     )
     .build();
  ```
- Returns following message.
- ```text
--i   --index                   index                                                      
--k   --kill    <sessions_id>   the big brown fox jumps over the lazy
-                               dog the big brown fox
-       rub     [something]     rub something                                              
--t             <something>     t something                                                
- o             [something]     o something   
- ```
