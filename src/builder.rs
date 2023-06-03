@@ -91,7 +91,7 @@ impl<'a> HelpMessageBuilder<'a> {
         let mut line_limit = max_character_number;
         let mut previous_index = 0;
         let mut current_index = line_limit;
-        let spaces = max_widths["short"] + max_widths["long"] + max_widths["parameter_name"] + 9;
+        let spaces = max_widths["short"] + max_widths["long"] + max_widths["parameter_name"] + 8;
         if line_limit >= field.len() {
             result.push_str(field);
         }
@@ -165,12 +165,10 @@ impl<'a> HelpMessageBuilder<'a> {
         let description_str = Self::field_wrapper(max_widths, &command.description, 40);
 
         message.push_str(&format!(
-            "{:<short$}   {:<long$}   {:<parameter_name$}   {:<description$}\n",
+            "{:<short$}   {:<long$}   {:<parameter_name$}  {:<description$}\n",
             command.short_command,
             command.long_command,
             parameter,
-            // command.parameter_name,
-            // command.description,
             description_str,
             short = max_widths.get("short").unwrap(),
             long = max_widths.get("long").unwrap(),
@@ -185,6 +183,19 @@ impl<'a> HelpMessageBuilder<'a> {
         let commands = self.commands;
         let max_widths = Self::max_width(&commands);
         let mut result = String::new();
+
+        result.push_str(&format!(
+            "{:<short$}   {:<long$}   {:<parameter_name$}  {:<description$}\n",
+            "",
+            "",
+            "",
+            "",
+            short = max_widths.get("short").unwrap(),
+            long = max_widths.get("long").unwrap(),
+            parameter_name = max_widths.get("parameter_name").unwrap(),
+            description = max_widths.get("description").unwrap(),
+        ));
+
         for mut command in commands.clone() {
             match command.dash_status {
                 DASHED::YES => {
@@ -209,7 +220,9 @@ impl<'a> HelpMessageBuilder<'a> {
 
             result.push_str(&Self::craft(command, &max_widths));
         }
-
+        if *max_widths.get("parameter_name").unwrap() > 2 {
+            result.push_str("\n\nNote: <> parameter is required. [] parameter is optional");
+        }
         result
     }
 }
